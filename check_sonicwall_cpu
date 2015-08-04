@@ -1,0 +1,44 @@
+#################################################
+#						#
+# Nagios Sonicwall cpu-check met notificatie	#
+# Versie 1.0					#
+# 						#
+# Copyright Vincent Lieftink			#
+# MHASMO bv					#
+# This script depends on check_snmp		#
+#################################################
+
+
+#!/bin/bash					
+
+# Global variables:
+PATH='/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin'
+SCRIPT_PATH="${0}"
+
+STATE_OK="0"
+STATE_WARNING="1"
+STATE_CRITICAL="2"
+STATE_UNKNOWN="3"
+
+HOST="$2"
+
+# This is where the magic happens
+checkcpu=`/home/nagios/bin/check_snmp -H $HOST -C public -o .1.3.6.1.4.1.8741.1.3.1.3.0 | awk {'print $4'}`
+
+# Worden er argumenten meegegeven?
+[ ${#} = 2 ] || {   echo "Usage: ${SCRIPT_PATH} -H <SERVER-IP>" ; exit "${STATE_UNKNOWN}"; }
+
+
+# Check-load adv treshold
+if [ $checkcpu -gt 95 ]
+then
+	echo "CRITICAL! High cpu%-utilization detected! = $checkcpu% | 'SONICWALL-CPU-UTILIZATION'=$checkcpu% "
+	exit ${STATE_CRITICAL} 
+elif [ $checkcpu -gt 80 ]
+then
+	echo "WARNING! High cpu%-utilization detected! = $checkcpu% | 'SONICWALL-CPU-UTILIZATION'=$checkcpu%"
+	exit ${STATE_WARNING}
+else
+	echo "OK! Normal cpu%-utilization = $checkcpu% | 'SONICWALL-CPU-UTILIZATION'=$checkcpu%"
+	exit ${STATE_OK}
+fi

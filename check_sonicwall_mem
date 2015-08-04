@@ -1,0 +1,43 @@
+#################################################
+#						#
+# Nagios Sonicwall cpu-check met notificatie	#
+# Versie 1.0					#
+# 						#
+# Copyright Vincent Lieftink			#
+# MHASMO bv					#
+#################################################
+
+
+#!/bin/bash					
+
+# Global variables:
+PATH='/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin'
+SCRIPT_PATH="${0}"
+
+STATE_OK="0"
+STATE_WARNING="1"
+STATE_CRITICAL="2"
+STATE_UNKNOWN="3"
+
+HOST="$2"
+
+# This is where the magic happens
+check=`/home/nagios/bin/check_snmp -H $HOST -C public -o .1.3.6.1.4.1.8741.1.3.1.4.0 | awk {'print $4'}`
+
+# Worden er argumenten meegegeven?
+[ ${#} = 2 ] || {   echo "Usage: ${SCRIPT_PATH} -H <SERVER-IP>" ; exit "${STATE_UNKNOWN}"; }
+
+
+# Check-load adv treshold
+if [ $check -gt 90 ]
+then
+	echo "CRITICAL! High mem%-utilization detected! = $check% | 'SONICWALL-MEM-UTILIZATION'=$check%"
+	exit ${STATE_CRITICAL} 
+elif [ $check -gt 80 ]
+then
+	echo "WARNING! High mem%-utilization detected! = $check% | 'SONICWALL-MEM-UTILIZATION'=$check%"
+	exit ${STATE_WARNING}
+else
+	echo "OK! Normal mem%-utilization = $check% | 'SONICWALL-MEM-UTILIZATION'=$check%"
+	exit ${STATE_OK}
+fi
