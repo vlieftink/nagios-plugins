@@ -1,14 +1,14 @@
+#!/bin/bash
+
 #################################################
 #						#
-# Nagios Sonicwall cpu-check met notificatie	#
+# Nagios Sonicwall cpu-CHECK met notificatie	#
 # Versie 1.0					#
 # 						#
 # Copyright Vincent Lieftink			#
 # MHASMO bv					#
 #################################################
 
-
-#!/bin/bash					
 
 # Global variables:
 PATH='/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin'
@@ -22,22 +22,27 @@ STATE_UNKNOWN="3"
 HOST="$2"
 
 # This is where the magic happens
-check=`/home/nagios/bin/check_snmp -H $HOST -C public -o .1.3.6.1.4.1.8741.1.3.1.2.0 | awk {'print $4'}`
+CHECK=`/home/nagios/bin/check_snmp -H $HOST -C public -o .1.3.6.1.4.1.8741.1.3.1.2.0 | awk {'print $4'}`
 
-# Worden er twee argumenten mee gegeven?
+# Worden er argumenten meegegeven?
 [ ${#} = 2 ] || {   echo "Usage: ${SCRIPT_PATH} -H <SERVER-IP>" ; exit "${STATE_UNKNOWN}"; }
 
+# Controleren of variable $CHECK inderdaad een getal is.
+if ! [[ $CHECK =~ ^-?[0-9]+$ ]] ; then
+	echo "ERROR! Invalid response!" 
+	exit $STATE_UNKNOWN
+fi
 
-# Check-load adv treshold
-if [ $check -gt 6000 ]
+# CHECK-load adv treshold
+if [ $CHECK -gt 10000 ]
 then
-	echo "CRITICAL! High conn-utilization detected! = $check | 'SONICWALL-CONN-UTILIZATION'=$check "
+	echo "CRITICAL! High conn-utilization detected! = $CHECK | 'SONICWALL-CONN-UTILIZATION'=$CHECK "
 	exit ${STATE_CRITICAL} 
-elif [ $check -gt 4000 ]
+elif [ $CHECK -gt 8000 ]
 then
-	echo "WARNING! High conn-utilization detected! = $check | 'SONICWALL-CONN-UTILIZATION'=$check "
+	echo "WARNING! High conn-utilization detected! = $CHECK | 'SONICWALL-CONN-UTILIZATION'=$CHECK "
 	exit ${STATE_WARNING}
 else
-	echo "OK! Normal conn-utilization = $check | 'SONICWALL-CONN-UTILIZATION'=$check "
+	echo "OK! Normal conn-utilization = $CHECK | 'SONICWALL-CONN-UTILIZATION'=$CHECK "
 	exit ${STATE_OK}
 fi
